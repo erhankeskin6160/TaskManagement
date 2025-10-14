@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>WebApi</name>
+    </assembly>
+    <members>
+        <member name="M:WebApi.Controllers.TaskItemController.CreateTask(Application.Features.TaskItems.Command.Create.CreateTaskItemCommand)">
+            <summary>
+            Task oluşturur
+            </summary>
+            <param name="command"></param>
+            <returns></returns>
+        </member>
+        <member name="M:WebApi.Controllers.TaskItemController.UpdateTask(System.Guid,Application.Features.TaskItems.Command.Update.UpdateTaskItemCommand)">
+            <summary>
+            Task Günceller
+            </summary>
+            <param name="id"></param>
+            <param name="command"></param>
+            <returns></returns>
+        </member>
+        <member name="M:WebApi.Controllers.TaskItemController.DeleteTaskItem(System.Guid)">
+            <summary>
+            Task'i Siler
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:WebApi.Controllers.TaskItemController.GetTaskById(System.Guid)">
+            <summary>
+            Id'göre task getirir
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:WebApi.Controllers.TaskItemController.GetTaskByStatus(System.Nullable{Domain.Enums.TaskItemStatus})">
+            <summary>
+             Status göre task  TaskItem  listesine döner
+            </summary>
+            <param name="status">Filtrelenecek TaskItem durumu (örnek: Pending, Completed..)</param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

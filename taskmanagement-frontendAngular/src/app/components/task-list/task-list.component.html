@@ -1,0 +1,179 @@
+<div class="task-management-container">
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <h1>Görev Yönetimi</h1>
+      <p>Görevlerinizi organize edin ve takip edin</p>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="filters-section">
+    <div class="filters-left">
+      <select [(ngModel)]="selectedStatus" (change)="onStatusFilterChange($event)" class="filter-select">
+        <option value="all">Tüm Görevler</option>
+        <option [value]="TaskItemStatus.Pending">Beklemede</option>
+        <option [value]="TaskItemStatus.InProgress">Devam Ediyor</option>
+        <option [value]="TaskItemStatus.Completed">Tamamlandı</option>
+      </select>
+    </div>
+
+    <div class="filters-right">
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+        placeholder="Görev ara..."
+        class="search-input"
+      />
+      <button (click)="openCreateModal()" class="btn-primary">
+       <i class="fa-solid fa-plus" style="color: #FFD43B;"></i> Yeni Görev Ekle
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Toplam Görev</div>
+      <div class="stat-value">{{ tasks.length }}</div>
+    </div>
+    <div class="stat-card stat-pending">
+      <div class="stat-label">Beklemede</div>
+      <div class="stat-value">{{ pendingCount }}</div>
+    </div>
+    <div class="stat-card stat-progress">
+      <div class="stat-label">Devam Ediyor</div>
+      <div class="stat-value">{{ inProgressCount }}</div>
+    </div>
+    <div class="stat-card stat-completed">
+      <div class="stat-label">Tamamlandı</div>
+      <div class="stat-value">{{ completedCount }}</div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    <p>Yükleniyor...</p>
+  </div>
+
+  <!-- Task Grid -->
+  <div class="task-grid" *ngIf="!isLoading">
+    <div *ngFor="let task of filteredTasks" class="task-card">
+      <div class="task-header">
+        <h3>{{ task.title }}</h3>
+        <div class="task-actions">
+          <button (click)="openEditModal(task)" class="btn-icon btn-edit" title="Düzenle">
+            <img width="36" height="36" src="https://img.icons8.com/emoji/48/pencil-emoji.png" alt="pencil-emoji"/>
+          </button>
+          <button (click)="deleteTask(task.id)" class="btn-icon btn-delete" title="Sil">
+            <img width="36" height="36" src="https://img.icons8.com/color/48/recycle-bin.png" alt="recycle-bin"/>
+          </button>
+        </div>
+      </div>
+
+      <p class="task-description">{{ task.description }}</p>
+
+      <div class="task-badges">
+        <span [class]="'badge ' + getStatusClass(task.status)">
+          {{ getStatusText(task.status) }}
+        </span>
+      </div>
+
+      <div class="task-meta">
+        <div class="meta-item">
+          <img width="16" height="16" src="https://img.icons8.com/external-goofy-color-kerismaker/96/external-Desk-Calender-construction-obivous-color-kerismaker.png" > Bitiş: {{ task.dueDate | date:'dd.MM.yyyy' }}
+        </div>
+        <div class="meta-item">
+          <img width="17" height="17" src="https://img.icons8.com/fluency/48/clock--v2.png" alt="clock--v2"/>  Oluşturma: {{ task.createdDate | date:'dd.MM.yyyy' }}
+        </div>
+      </div>
+
+      <div class="task-status-select">
+        <select
+          [value]="task.status"
+          (change)="updateTaskStatus(task, $event)"
+          class="status-dropdown"
+        >
+          <option [value]="TaskItemStatus.Pending">Beklemede</option>
+          <option [value]="TaskItemStatus.InProgress">Devam Ediyor</option>
+          <option [value]="TaskItemStatus.Completed">Tamamlandı</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+
+  <div *ngIf="!isLoading && filteredTasks.length === 0" class="empty-state">
+    <div class="empty-icon">📋</div>
+    <p>Görev bulunamadı</p>
+  </div>
+
+  <!-- Model -->
+<div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ editingTask ? 'Görevi Düzenle' : 'Yeni Görev Oluştur' }}</h2>
+      <button (click)="closeModal()" class="btn-close">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!--Hata verdiğimiz alan-->
+      <div *ngIf="errorMessages.length > 0" class="alert alert-danger mb-3">
+        <ul>
+          <li *ngFor="let err of errorMessages">{{ err }}</li>
+        </ul>
+      </div>
+
+      <div class="form-group">
+        <label>Görev Başlığı <span class="required">*</span></label>
+        <input
+          type="text"
+          [(ngModel)]="taskForm.title"
+          placeholder="Görev başlığını girin"
+          class="form-control"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Açıklama</label>
+        <textarea
+          [(ngModel)]="taskForm.description"
+          rows="4"
+          placeholder="Görev açıklamasını girin"
+          class="form-control"
+        ></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Durum</label>
+          <select [(ngModel)]="taskForm.status" class="form-control">
+            <option [value]="TaskItemStatus.Pending">Beklemede</option>
+            <option [value]="TaskItemStatus.InProgress">Devam Ediyor</option>
+            <option [value]="TaskItemStatus.Completed">Tamamlandı</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Bitiş Tarihi <span class="required">*</span></label>
+          <input
+            type="date"
+            [(ngModel)]="taskForm.dueDate"
+            class="form-control"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button (click)="closeModal()" class="btn-secondary">İptal</button>
+      <button (click)="saveTask()" class="btn-primary">
+        {{ editingTask ? 'Güncelle' : 'Oluştur' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+</div>
